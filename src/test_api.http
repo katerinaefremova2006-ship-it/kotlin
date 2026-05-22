@@ -1,0 +1,15 @@
+### Тестирование POST /compute
+POST http://localhost:8080/compute
+Content-Type: application/json
+
+{
+  "matrices": [
+    [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
+    [[9, 8, 7], [6, 5, 4], [3, 2, 1]],
+    [[1, 0, 1], [0, 1, 0], [1, 1, 1]]
+  ]
+}
+
+### Тестирование GET /result/{id}
+# Замените ID на значение, полученное из ответа POST-запроса
+GET http://localhost:8080/result/86519247-fe0c-4a1a-86c6-528f33313977
