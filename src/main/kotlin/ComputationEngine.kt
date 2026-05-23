@@ -1,27 +1,38 @@
 import java.util.concurrent.ConcurrentHashMap
 import java.util.UUID
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 
 class ComputationEngine {
+    private val engineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
     private val results = ConcurrentHashMap<String, ResultResponse>()
 
-    // Функция теперь suspend, так как мы используем внутри withContext
-    suspend fun startComputation(matrices: List<List<List<Int>>>): String = withContext(Dispatchers.Default) {
+    fun startComputation(matrices: List<List<List<Int>>>): String {
         val id = UUID.randomUUID().toString()
 
         if (matrices.isEmpty()) {
             results[id] = ResultResponse(emptyList())
-            return@withContext id
+            return id
         }
 
-        var currentResult = matrices[0]
-        for (m in 1 until matrices.size) {
-            currentResult = multiplyTwoMatrices(currentResult, matrices[m])
+        engineScope.launch {
+            try {
+                val calculatedResult = withContext(Dispatchers.Default) {
+                    var currentResult = matrices[0]
+                    for (m in 1 until matrices.size) {
+                        currentResult = multiplyTwoMatrices(currentResult, matrices[m])
+                    }
+                    currentResult
+                }
+
+                results[id] = ResultResponse(calculatedResult)
+
+            } catch (e: IllegalArgumentException) {
+                println("Ошибка вычисления для ID $id: ${e.message}")
+            }
         }
 
-        results[id] = ResultResponse(currentResult)
-        id
+        return id
     }
 
     private fun multiplyTwoMatrices(a: List<List<Int>>, b: List<List<Int>>): List<List<Int>> {
